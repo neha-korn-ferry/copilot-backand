@@ -1,12 +1,13 @@
 import express, { urlencoded } from 'express';
-import { CONFIG } from './config/config.js';
-import authRouter from './routes/authRoute.js';
-import privateRouter from './routes/privateRoute.js';
-import { requestLogger } from './config/logger.js';
-import jwtLogger from './middleware/jwtLogger.js';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
+import { CONFIG } from './config/config.js';
+import { requestLogger } from './config/logger.js';
+import jwtLogger from './middleware/jwtLogger.js';
+import authRouter from './routes/authRoute.js';
+import copilotRouter from './routes/copilotRoute.js'
+
 const app = express();
 const PORT = CONFIG.API_PORT;
 
@@ -34,10 +35,9 @@ swaggerDocument.servers = [
 // Use Swagger UI with modified spec
 app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-
 // Route setup
 app.use('/api/auth', authRouter);
-app.use('/api', privateRouter);
+app.use('/api/copilot', copilotRouter);
 
 // Error handling for undefined routes
 app.use((req, res, next) => {

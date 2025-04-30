@@ -5,13 +5,13 @@ info:
   description: API documentation for your Node.js app
 
 servers:
-  - url: `${process.env.BASE_URL}/api`
+  - url: `${process.env.BASE_URL}/api`  
 
 tags:
   - name: Auth
     description: Authentication related routes
-  - name: User
-    description: User related routes
+  - name: Copilot
+    description: Copilot-related endpoints (test, participant-summary)
 
 paths:
   /auth/generate-token:
@@ -46,11 +46,19 @@ paths:
                     type: string
         '400':
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid username or password
 
-  /hello:
+  /copilot/hello:
     get:
       tags:
-        - User
+        - Copilot
       summary: Return a hello message (Protected Route)
       description: Requires a valid JWT token to access.
       security:
@@ -65,7 +73,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Hello, Neha!
+                    example: Hello, world!
         '401':
           description: Unauthorized (invalid or missing token)
           content:
@@ -75,7 +83,51 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: Token missing or invalid.
+                    example: Token missing or invalid
+
+  /copilot/participant-summary:
+    get:
+      tags:
+        - Copilot
+      summary: Get assigned participants for coach
+      description: Coaches can call this API with SSO token to get their assigned participants.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response with assigned participants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coach:
+                    type: string
+                    example: coach123
+                  participants:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: p1
+                        name:
+                          type: string
+                          example: John Doe
+                        assignedTo:
+                          type: string
+                          example: coach123
+        '401':
+          description: Unauthorized (invalid or missing token)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Token missing or invalid
 
 components:
   securitySchemes:
