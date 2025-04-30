@@ -1,4 +1,4 @@
-import express, { urlencoded } from 'express';
+import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
@@ -6,50 +6,77 @@ import { CONFIG } from './config/config.js';
 import { requestLogger } from './config/logger.js';
 import jwtLogger from './middleware/jwtLogger.js';
 import authRouter from './routes/authRoute.js';
-import copilotRouter from './routes/copilotRoute.js'
+import copilotRouter from './routes/copilotRoute.js';
+import { errorResponse } from './utils/responseHandler.js'; 
 
 const app = express();
-const PORT = CONFIG.API_PORT;
+const PORT = CONFIG.API_PORT || 3000;
 
-// Body configuration
+/**
+ * ========================
+ * Middleware Configuration
+ * ========================
+ */
+
+// Parse incoming JSON and URL-encoded payloads
 app.use(express.json());
-app.use(urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-// Use request logger middleware for logging all incoming requests
+// Request logging middleware
 app.use(requestLogger);
 
-// Middleware to unpack and log JWT token
+// JWT logging middleware
 app.use(jwtLogger);
 
-// Swagger setup
-// Load Swagger YAML
-const swaggerDocument = YAML.load(path.join(process.cwd(), './swagger/swagger.yaml'));
-
-// Dynamically inject server URL based on current environment
+/**
+ * ========================
+ * Swagger Setup
+ * ========================
+ */
+const swaggerDocument = YAML.load(path.resolve('swagger/swagger.yaml'));
 swaggerDocument.servers = [
-    {
-        url: `http://localhost:${PORT}/api`, // or use CONFIG.BASE_URL if available
-    },
+  {
+    url: `${CONFIG.BASE_URL || `http://localhost:${PORT}`}/api`,
+  },
 ];
 
-// Use Swagger UI with modified spec
-app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Route setup
+/**
+ * ========================
+ * Routes
+ * ========================
+ */
 app.use('/api/auth', authRouter);
 app.use('/api/copilot', copilotRouter);
 
-// Error handling for undefined routes
-app.use((req, res, next) => {
-    res.status(404).json({ message: 'Route not found' });
+/**
+ * ========================
+ * Error Handling
+ * ========================
+ */
+
+// 404 Handler for unmatched routes
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: 'Route not found',
+  });
 });
 
-// General error handler (Internal Server Error)
+// Global error handler
 app.use((err, req, res, next) => {
-    errorResponse(res, err);
+  console.error('Internal Server Error:', err);
+  return errorResponse(res, err, 500, 'Internal Server Error');
 });
 
-// Server setup
+/**
+ * ========================
+ * Server Bootstrap
+ * ========================
+ */
 app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
+  console.log(`Server started on http://localhost:${PORT}`);
 });
+
+export default app; // optional, useful for testing

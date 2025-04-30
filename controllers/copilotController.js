@@ -11,7 +11,6 @@ export const helloTest = (req, res) => {
 export const getParticipantSummary = (req, res) => {
     const coachUsername =  req.user?.username || 'james';
     try {
-        console.log('user in request object --------:',req?.user)
         const mockParticipants = [
             { id: 'p1', name: 'John Doe', assignedTo: coachUsername },
             { id: 'p2', name: 'Jane Smith', assignedTo: coachUsername },
