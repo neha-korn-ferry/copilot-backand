@@ -2,12 +2,11 @@ import express, { urlencoded } from 'express';
 import { CONFIG } from './config/config.js';
 import authRouter from './routes/authRoute.js';
 import privateRouter from './routes/privateRoute.js';
-import swaggerJSDoc from 'swagger-jsdoc';
-import { swaggerOptions } from './swagger/swaggerOptions.js';
-import swaggerUi from 'swagger-ui-express';
 import { requestLogger } from './config/logger.js';
 import jwtLogger from './middleware/jwtLogger.js';
-
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+import path from 'path';
 const app = express();
 const PORT = CONFIG.API_PORT;
 
@@ -22,8 +21,19 @@ app.use(requestLogger);
 app.use(jwtLogger);
 
 // Swagger setup
-const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Load Swagger YAML
+const swaggerDocument = YAML.load(path.join(process.cwd(), './swagger/swagger.yaml'));
+
+// Dynamically inject server URL based on current environment
+swaggerDocument.servers = [
+    {
+        url: `http://localhost:${PORT}/api`, // or use CONFIG.BASE_URL if available
+    },
+];
+
+// Use Swagger UI with modified spec
+app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 // Route setup
 app.use('/api/auth', authRouter);
