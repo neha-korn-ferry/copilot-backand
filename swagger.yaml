@@ -1,0 +1,85 @@
+openapi: 3.0.0
+info:
+  title: Copilot Test API's
+  version: 1.0.0
+  description: API documentation for your Node.js app
+
+servers:
+  - url: http://localhost:3000/api
+
+tags:
+  - name: Auth
+    description: Authentication related routes
+  - name: User
+    description: User related routes
+
+paths:
+  /auth/generate-token:
+    post:
+      tags:
+        - Auth
+      summary: Generate a new JWT token
+      description: Generate a token for a valid user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Token generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Invalid credentials
+
+  /hello:
+    get:
+      tags:
+        - User
+      summary: Return a hello message (Protected Route)
+      description: Requires a valid JWT token to access.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful hello message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Hello, Neha!
+        '401':
+          description: Unauthorized (invalid or missing token)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Token missing or invalid.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
