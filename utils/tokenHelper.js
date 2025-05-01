@@ -7,7 +7,7 @@ export const createToken = (payload) => {
   }
 
   const token = jwt.sign(payload, CONFIG.JWT_SECRET_KEY, {
-    expiresIn: '1h',
+    expiresIn: '15d',
     issuer: 'copilot-backend'
   });
 
